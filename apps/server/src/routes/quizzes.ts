@@ -25,9 +25,7 @@ const optionSchema = z.object({
 
 const questionSchema = z.object({
   type: z.nativeEnum(QuestionType),
-  text: z.string().min(1).refine((value) => value.includes('?'), {
-    message: 'Question text must include "?"',
-  }),
+  text: z.string().min(1),
   imageUrl: z.string().optional().nullable(),
   timeLimitSec: z.number().int().min(5).max(300).optional(),
   points: z.number().int().min(1).max(1000).optional(),

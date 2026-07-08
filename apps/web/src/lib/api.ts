@@ -9,6 +9,27 @@ export interface User {
   role: 'ORGANIZER' | 'PARTICIPANT' | 'BOTH';
 }
 
+function formatApiError(error: unknown, status: number): string {
+  if (typeof error === 'string') return error;
+  if (Array.isArray(error)) {
+    const lines = error.map((item) => {
+      if (typeof item === 'string') return item;
+      if (item && typeof item === 'object') {
+        const issue = item as { path?: (string | number)[]; message?: string };
+        const field = issue.path?.length ? issue.path.join('.') : 'field';
+        return issue.message ? `${field}: ${issue.message}` : JSON.stringify(item);
+      }
+      return String(item);
+    });
+    return lines.join('\n') || `HTTP ${status}`;
+  }
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = (error as { message: unknown }).message;
+    if (typeof message === 'string') return message;
+  }
+  return error != null ? JSON.stringify(error) : `HTTP ${status}`;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -18,8 +39,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const res = await fetch(`${getApiUrl()}${path}`, { ...options, headers });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(err.error || `HTTP ${res.status}`);
+    const body = await res.json().catch(() => ({ error: 'Request failed' }));
+    throw new Error(formatApiError(body.error, res.status));
   }
   if (res.status === 204) return undefined as T;
   return res.json();
