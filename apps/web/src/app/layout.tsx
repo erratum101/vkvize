@@ -8,10 +8,6 @@ const inter = Inter({ subsets: ['latin', 'cyrillic'], variable: '--font-inter' }
 export const metadata: Metadata = {
   title: 'V Kvize',
   description: 'Платформа для проведения интерактивных квизов в реальном времени',
-  icons: {
-    icon: '/icon.png',
-    apple: '/icon.png',
-  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
