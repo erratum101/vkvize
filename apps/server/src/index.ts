@@ -20,9 +20,19 @@ const configuredOrigins = CORS_ORIGIN.split(',').map((origin) => origin.trim()).
 const localDevOriginPattern =
   /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/;
 
+function isVercelAppOrigin(origin: string) {
+  try {
+    const { protocol, hostname } = new URL(origin);
+    return protocol === 'https:' && hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+}
+
 function isAllowedOrigin(origin: string | undefined) {
   if (!origin) return true;
   if (configuredOrigins.includes(origin)) return true;
+  if (isVercelAppOrigin(origin)) return true;
   return process.env.NODE_ENV !== 'production' && localDevOriginPattern.test(origin);
 }
 
