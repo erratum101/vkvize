@@ -33,13 +33,87 @@ async function persistParticipantScore(participantId: string, totalScore: number
   });
 }
 
-async function closeQuestion(io: Server, roomCode: string) {
+function getResultDisplaySec(settings: QuizSettings) {
+  return settings.resultDisplaySec ?? DEFAULT_QUIZ_SETTINGS.resultDisplaySec;
+}
+
+async function finishSessionInternal(io: Server, roomCode: string) {
   const session = sessionManager.get(roomCode);
   if (!session) return;
 
   sessionManager.clearAnswerTimer(roomCode);
+  sessionManager.clearResultTimer(roomCode);
+  session.phase = SessionPhase.FINISHED;
+  session.questionDeadline = null;
+  session.resultDeadline = null;
+
+  await prisma.quizSession.update({
+    where: { id: session.sessionId },
+    data: { phase: SessionPhase.FINISHED, status: 'FINISHED', endedAt: new Date() },
+  });
+
+  emitState(io, roomCode);
+  emitLeaderboard(io, roomCode);
+}
+
+async function showNextQuestion(io: Server, roomCode: string) {
+  const session = sessionManager.get(roomCode);
+  if (!session) return false;
+
+  const nextIndex = session.currentQuestionIndex + 1;
+  if (nextIndex >= session.questions.length) return false;
+
+  sessionManager.clearResultTimer(roomCode);
+  sessionManager.resetAnswerStats(roomCode);
+
+  const question = session.questions[nextIndex];
+  session.currentQuestionIndex = nextIndex;
+  session.phase = SessionPhase.ANSWERING;
+  session.questionDeadline = Date.now() + question.timeLimitSec * 1000;
+  session.resultDeadline = null;
+
+  await prisma.quizSession.update({
+    where: { id: session.sessionId },
+    data: {
+      phase: SessionPhase.ANSWERING,
+      currentQuestionIndex: nextIndex,
+      status: 'IN_PROGRESS',
+      startedAt: nextIndex === 0 ? new Date() : undefined,
+    },
+  });
+
+  emitState(io, roomCode);
+
+  sessionManager.setAnswerTimer(
+    roomCode,
+    setTimeout(() => closeQuestion(io, roomCode), question.timeLimitSec * 1000)
+  );
+
+  return true;
+}
+
+async function advanceAfterResult(io: Server, roomCode: string) {
+  const session = sessionManager.get(roomCode);
+  if (!session || session.phase !== SessionPhase.QUESTION_RESULT) return;
+
+  session.resultDeadline = null;
+  const hasMore = session.currentQuestionIndex < session.questions.length - 1;
+  if (hasMore) {
+    await showNextQuestion(io, roomCode);
+  } else {
+    await finishSessionInternal(io, roomCode);
+  }
+}
+
+async function closeQuestion(io: Server, roomCode: string) {
+  const session = sessionManager.get(roomCode);
+  if (!session || session.phase !== SessionPhase.ANSWERING) return;
+
+  sessionManager.clearAnswerTimer(roomCode);
   session.phase = SessionPhase.QUESTION_RESULT;
   session.questionDeadline = null;
+  const resultDisplaySec = getResultDisplaySec(session.settings);
+  session.resultDeadline = Date.now() + resultDisplaySec * 1000;
 
   await prisma.quizSession.update({
     where: { id: session.sessionId },
@@ -48,6 +122,66 @@ async function closeQuestion(io: Server, roomCode: string) {
 
   emitState(io, roomCode);
   emitLeaderboard(io, roomCode);
+
+  sessionManager.setResultTimer(
+    roomCode,
+    setTimeout(() => advanceAfterResult(io, roomCode), resultDisplaySec * 1000)
+  );
+}
+
+function maybeCloseIfAllAnswered(io: Server, roomCode: string) {
+  const session = sessionManager.get(roomCode);
+  if (!session || session.phase !== SessionPhase.ANSWERING) return;
+
+  const totalParticipants = sessionManager.getParticipantCount(session);
+  if (totalParticipants === 0) return;
+  if (session.answeredParticipantIds.size < totalParticipants) return;
+
+  void closeQuestion(io, roomCode);
+}
+
+function ensureQuestionTiming(io: Server, roomCode: string) {
+  const session = sessionManager.get(roomCode);
+  if (!session) return;
+
+  if (session.phase === SessionPhase.ANSWERING) {
+    if (!session.questionDeadline) {
+      const question = session.questions[session.currentQuestionIndex];
+      if (question) {
+        session.questionDeadline = Date.now() + question.timeLimitSec * 1000;
+        sessionManager.setAnswerTimer(
+          roomCode,
+          setTimeout(() => closeQuestion(io, roomCode), question.timeLimitSec * 1000)
+        );
+      }
+      return;
+    }
+
+    const remainingMs = session.questionDeadline - Date.now();
+    if (remainingMs <= 0) {
+      void closeQuestion(io, roomCode);
+      return;
+    }
+
+    sessionManager.setAnswerTimer(
+      roomCode,
+      setTimeout(() => closeQuestion(io, roomCode), remainingMs)
+    );
+    return;
+  }
+
+  if (session.phase === SessionPhase.QUESTION_RESULT && session.resultDeadline) {
+    const remainingMs = session.resultDeadline - Date.now();
+    if (remainingMs <= 0) {
+      void advanceAfterResult(io, roomCode);
+      return;
+    }
+
+    sessionManager.setResultTimer(
+      roomCode,
+      setTimeout(() => advanceAfterResult(io, roomCode), remainingMs)
+    );
+  }
 }
 
 export function setupSocket(io: Server) {
@@ -101,6 +235,7 @@ export function setupSocket(io: Server) {
             })),
             settings,
           });
+          ensureQuestionTiming(io, roomCode);
         }
 
         if (payload.role === 'organizer') {
@@ -209,32 +344,8 @@ export function setupSocket(io: Server) {
         return ack?.({ error: 'Only organizer can show questions' });
       }
 
-      const nextIndex = session.currentQuestionIndex + 1;
-      if (nextIndex >= session.questions.length) {
-        return ack?.({ error: 'No more questions' });
-      }
-
-      const question = session.questions[nextIndex];
-      session.currentQuestionIndex = nextIndex;
-      session.phase = SessionPhase.ANSWERING;
-      session.questionDeadline = Date.now() + question.timeLimitSec * 1000;
-
-      await prisma.quizSession.update({
-        where: { id: session.sessionId },
-        data: {
-          phase: SessionPhase.ANSWERING,
-          currentQuestionIndex: nextIndex,
-          status: 'IN_PROGRESS',
-          startedAt: session.currentQuestionIndex === 0 ? new Date() : undefined,
-        },
-      });
-
-      emitState(io, joinedRoom);
-
-      sessionManager.setAnswerTimer(
-        joinedRoom,
-        setTimeout(() => closeQuestion(io, joinedRoom!), question.timeLimitSec * 1000)
-      );
+      const started = await showNextQuestion(io, joinedRoom);
+      if (!started) return ack?.({ error: 'No more questions' });
 
       ack?.({ success: true });
     });
@@ -297,8 +408,12 @@ export function setupSocket(io: Server) {
       participant.totalScore += pointsEarned;
       await persistParticipantScore(participant.id, participant.totalScore);
 
+      sessionManager.recordAnswer(joinedRoom, participant.id);
+
       ack?.({ success: true, pointsEarned, isCorrect });
+      emitState(io, joinedRoom);
       emitLeaderboard(io, joinedRoom);
+      maybeCloseIfAllAnswered(io, joinedRoom);
     });
 
     socket.on(WS_EVENTS.QUESTION_CLOSE, async (_payload, ack?: (res: unknown) => void) => {
@@ -318,17 +433,7 @@ export function setupSocket(io: Server) {
         return ack?.({ error: 'Only organizer' });
       }
 
-      sessionManager.clearAnswerTimer(joinedRoom);
-      session.phase = SessionPhase.FINISHED;
-      session.questionDeadline = null;
-
-      await prisma.quizSession.update({
-        where: { id: session.sessionId },
-        data: { phase: SessionPhase.FINISHED, status: 'FINISHED', endedAt: new Date() },
-      });
-
-      emitState(io, joinedRoom);
-      emitLeaderboard(io, joinedRoom);
+      await finishSessionInternal(io, joinedRoom);
       ack?.({ success: true });
     });
 

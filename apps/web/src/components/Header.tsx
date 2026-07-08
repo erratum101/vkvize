@@ -51,7 +51,7 @@ function UserMenu() {
         onClick={() => setOpen((v) => !v)}
       >
         <Avatar name={user.name} avatarUrl={user.avatarUrl} size="sm" className="shrink-0" />
-        <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium text-[var(--vk-text-primary)] opacity-0 transition-all duration-200 group-hover:max-w-40 group-hover:opacity-100">
+        <span className="hidden max-w-24 truncate text-sm font-medium text-[var(--vk-text-primary)] sm:block sm:max-w-40">
           {user.name}
         </span>
       </button>
@@ -105,7 +105,7 @@ function UserMenu() {
   );
 }
 
-export function Header() {
+export function Header({ compact = false }: { compact?: boolean }) {
   const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
@@ -127,11 +127,11 @@ export function Header() {
   return (
     <header className="vk-header">
       <div className={`vk-header-surface ${scrolled ? 'is-scrolled' : ''}`}>
-        <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+        <div className={`relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-4 sm:px-4 ${compact ? 'max-w-4xl' : ''}`}>
           <Link
             href="/"
             draggable={false}
-            className="flex shrink-0 items-center gap-2 font-black text-xl tracking-tight text-[var(--vk-text-primary)]"
+            className="flex min-w-0 shrink items-center gap-2 text-lg font-black tracking-tight text-[var(--vk-text-primary)] sm:text-xl"
           >
             <Image
               src="/design/vkvize-app-icon.png?v=2"
@@ -139,12 +139,12 @@ export function Header() {
               width={34}
               height={34}
               unoptimized
-              className="h-8 w-8 rounded-xl"
+              className="h-8 w-8 shrink-0 rounded-xl"
               priority
             />
-            V Kvize
+            <span className="truncate">V Kvize</span>
           </Link>
-          <nav className="flex min-w-0 flex-nowrap items-center justify-end gap-2 sm:gap-3">
+          <nav className="flex min-w-0 shrink-0 items-center justify-end gap-1.5 sm:gap-3">
             {user ? (
               <UserMenu />
             ) : (
@@ -153,17 +153,18 @@ export function Header() {
                   variant="secondary"
                   size="sm"
                   href="/organizer/quizzes"
-                  className="shrink-0 !bg-transparent hover:!bg-transparent text-[var(--vk-text-primary)]/80 hover:text-[var(--vk-text-primary)]"
+                  className="shrink-0 !bg-transparent px-2 text-xs hover:!bg-transparent sm:px-3 sm:text-sm text-[var(--vk-text-primary)]/80 hover:text-[var(--vk-text-primary)]"
                 >
-                  Создать квиз
+                  <span className="hidden sm:inline">Создать квиз</span>
+                  <span className="sm:hidden">Создать</span>
                 </Button>
                 <Button
                   variant="secondary"
                   size="sm"
                   href="/join"
-                  className="shrink-0 !bg-transparent hover:!bg-transparent text-[var(--vk-text-primary)]/80 hover:text-[var(--vk-text-primary)]"
+                  className="shrink-0 !bg-transparent px-2 text-xs hover:!bg-transparent sm:px-3 sm:text-sm text-[var(--vk-text-primary)]/80 hover:text-[var(--vk-text-primary)]"
                 >
-                  Войти в квиз
+                  Войти
                 </Button>
               </>
             )}

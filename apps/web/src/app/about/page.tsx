@@ -29,7 +29,7 @@ export default function AboutPage() {
             <li>Конструктор квизов с 4 типами вопросов</li>
             <li>Real-time проведение через WebSocket</li>
             <li>Подсчёт баллов и лидерборд</li>
-            <li>Личный кабинет с историей</li>
+            <li>История квизов</li>
           </ul>
         </CardBody>
       </Card>

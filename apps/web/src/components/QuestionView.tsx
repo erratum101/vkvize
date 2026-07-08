@@ -48,16 +48,21 @@ export function QuestionView({ question, phase, timeLeft, disabled, onSubmit }: 
   const showCorrect = phase === SessionPhase.QUESTION_RESULT;
 
   return (
-    <div className="select-none space-y-6" onContextMenu={(e) => e.preventDefault()}>
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-[var(--vk-text-primary)]">{question.text}</h2>
+    <div className="select-none space-y-4 sm:space-y-6" onContextMenu={(e) => e.preventDefault()}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <h2 className="min-w-0 flex-1 text-lg font-semibold leading-snug text-[var(--vk-text-primary)] sm:text-xl">
+          {question.text}
+        </h2>
         {timeLeft !== null && phase === SessionPhase.ANSWERING && (
           <div
-            className={`text-2xl font-bold tabular-nums ${
-              timeLeft <= 5 ? 'text-[var(--vk-danger)]' : 'text-[var(--vk-primary)]'
+            className={`vk-timer-badge shrink-0 self-start ${
+              timeLeft <= 5 ? 'is-urgent' : ''
             }`}
           >
-            {timeLeft}с
+            <span className="vk-timer-icon" aria-hidden>
+              ⏱
+            </span>
+            <span className="text-xl font-bold tabular-nums sm:text-2xl">{timeLeft}с</span>
           </div>
         )}
       </div>

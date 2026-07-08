@@ -37,31 +37,31 @@ export default function HomePage() {
           height={540}
           priority
           unoptimized
-          className="pointer-events-none absolute -z-20 right-[clamp(-6%,2vw,8%)] top-1/2 h-auto w-[clamp(280px,58vw,860px)] -translate-y-1/2 object-contain opacity-95 mix-blend-multiply"
+          className="pointer-events-none absolute -z-20 right-[clamp(-6%,2vw,8%)] top-1/2 hidden h-auto w-[clamp(280px,58vw,860px)] -translate-y-1/2 object-contain opacity-95 mix-blend-multiply md:block"
         />
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_58%_44%,rgba(228,33,211,0.1),transparent_34%),linear-gradient(90deg,rgba(237,238,240,0.98)_0%,rgba(245,246,248,0.9)_28%,rgba(245,246,248,0.5)_55%,rgba(245,246,248,0.08)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 -z-10 h-48 bg-gradient-to-t from-[var(--vk-bg-page)] via-[var(--vk-bg-page)]/70 to-transparent" />
         <div className="pointer-events-none absolute -left-28 top-16 h-72 w-72 rounded-full bg-[var(--vk-primary)]/20 blur-3xl" />
         <div className="pointer-events-none absolute right-24 top-12 h-56 w-56 rounded-full bg-fuchsia-400/15 blur-3xl" />
 
-        <div className="mx-auto flex min-h-screen max-w-6xl items-center px-4 pb-20 pt-28">
+        <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl items-center px-4 pb-12 pt-24 sm:min-h-screen sm:pb-20 sm:pt-28">
           <div className="max-w-3xl">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/64 px-4 py-2 text-sm font-medium text-[var(--vk-primary)] shadow-[var(--vk-shadow-sm)] backdrop-blur-xl">
+            <div className="mb-4 inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-white/70 bg-white/64 px-3 py-2 text-xs font-medium text-[var(--vk-primary)] shadow-[var(--vk-shadow-sm)] backdrop-blur-xl sm:mb-6 sm:px-4 sm:text-sm">
             <span className="h-2 w-2 rounded-2xl bg-[var(--vk-accent)] shadow-[0_0_18px_rgba(75,179,75,0.9)]" />
               без регистрации · realtime · V Kvize
             </div>
-            <h1 className="mb-6 max-w-2xl text-[clamp(2.25rem,4.5vw+1rem,4.5rem)] font-black italic uppercase leading-[0.95] tracking-[-0.05em] text-[var(--vk-text-primary)]">
+            <h1 className="mb-4 max-w-2xl text-[clamp(2rem,8vw,4.5rem)] font-black italic uppercase leading-[0.95] tracking-[-0.05em] text-[var(--vk-text-primary)] sm:mb-6">
               Квизы в реальном времени
             </h1>
-            <p className="mb-10 max-w-xl text-[clamp(1rem,0.4vw+0.9rem,1.125rem)] leading-8 text-[var(--vk-text-secondary)]">
+            <p className="mb-8 max-w-xl text-base leading-7 text-[var(--vk-text-secondary)] sm:mb-10 sm:text-[clamp(1rem,0.4vw+0.9rem,1.125rem)] sm:leading-8">
               Создавайте интерактивные опросы, подключайте участников по коду комнаты и показывайте
               результаты в эффектном лидерборде. Без регистрации: имя, аватарка и сразу в игру.
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
               <Button
                 size="lg"
                 href="/organizer/quizzes"
-                className="min-w-56 !rounded-2xl bg-[var(--vk-primary)] px-8 py-4 text-white shadow-[0_18px_44px_rgba(0,119,255,0.28)] hover:bg-[var(--vk-primary-hover)]"
+                className="w-full !rounded-2xl bg-[var(--vk-primary)] px-6 py-4 text-white shadow-[0_18px_44px_rgba(0,119,255,0.28)] hover:bg-[var(--vk-primary-hover)] sm:min-w-56 sm:w-auto sm:px-8"
               >
                 Создать квиз
               </Button>
@@ -69,7 +69,7 @@ export default function HomePage() {
                 size="lg"
                 variant="secondary"
                 href="/join"
-                className="min-w-48 !rounded-2xl border border-white/70 bg-white/72 px-8 py-4 text-[var(--vk-text-primary)]/80 backdrop-blur-xl hover:bg-white/90 hover:text-[var(--vk-text-primary)]"
+                className="w-full !rounded-2xl border border-white/70 bg-white/72 px-6 py-4 text-[var(--vk-text-primary)]/80 backdrop-blur-xl hover:bg-white/90 hover:text-[var(--vk-text-primary)] sm:min-w-48 sm:w-auto sm:px-8"
               >
                 Присоединиться
               </Button>

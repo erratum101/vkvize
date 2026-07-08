@@ -10,6 +10,7 @@ import {
 } from '@vkvize/shared';
 import { LocalProfile } from '@/lib/local-profile';
 import { getWsUrl } from '@/lib/service-url';
+import { useCountdown } from './useCountdown';
 
 export function useQuizSession(roomCode: string, role: 'organizer' | 'participant', profile?: LocalProfile | null) {
   const [connected, setConnected] = useState(false);
@@ -93,9 +94,18 @@ export function useQuizSession(roomCode: string, role: 'organizer' | 'participan
     });
   }, []);
 
-  const timeLeft = sessionState?.questionDeadline
-    ? Math.max(0, Math.ceil((sessionState.questionDeadline - Date.now()) / 1000))
-    : null;
+  const answerTimeLeft = useCountdown(
+    sessionState?.phase === SessionPhase.ANSWERING ? sessionState.questionDeadline : null
+  );
+  const resultTimeLeft = useCountdown(
+    sessionState?.phase === SessionPhase.QUESTION_RESULT ? sessionState.resultDeadline : null
+  );
+
+  const timeLeft =
+    sessionState?.phase === SessionPhase.ANSWERING
+      ? answerTimeLeft ??
+        (sessionState.currentQuestion ? sessionState.currentQuestion.timeLimitSec : null)
+      : null;
 
   return {
     connected,
@@ -104,6 +114,7 @@ export function useQuizSession(roomCode: string, role: 'organizer' | 'participan
     participantId,
     error,
     timeLeft,
+    resultTimeLeft,
     phase: sessionState?.phase as SessionPhase | undefined,
     showQuestion,
     closeQuestion,

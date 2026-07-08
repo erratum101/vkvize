@@ -73,6 +73,65 @@ main {
   z-index: 0;
 }
 
+.vk-page {
+  padding-top: 5rem;
+}
+
+@keyframes hourglass-flip {
+  0%,
+  100% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(180deg);
+  }
+}
+
+@keyframes timer-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.vk-hourglass {
+  perspective: 600px;
+}
+
+.vk-hourglass-icon {
+  display: inline-block;
+  font-size: 3rem;
+  line-height: 1;
+  animation: hourglass-flip 2.8s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.vk-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background: rgba(0, 119, 255, 0.08);
+  padding: 0.5rem 0.875rem;
+  color: var(--vk-primary);
+  animation: timer-pulse 1.2s ease-in-out infinite;
+}
+
+.vk-timer-badge.is-urgent {
+  background: rgba(235, 87, 87, 0.1);
+  color: var(--vk-danger);
+}
+
+.vk-timer-icon {
+  display: inline-block;
+  font-size: 1.125rem;
+  animation: hourglass-flip 2.8s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
 .vk-header {
   position: fixed;
   top: 0;

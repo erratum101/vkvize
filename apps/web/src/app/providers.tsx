@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { AuthProvider } from '@/lib/auth-context';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -11,7 +12,14 @@ function isEditableTarget(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest(EDITABLE_SELECTOR));
 }
 
+function isLiveSessionPath(pathname: string) {
+  return pathname.startsWith('/play/') || pathname.startsWith('/organizer/session/');
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const hideFooter = isLiveSessionPath(pathname);
+
   useEffect(() => {
     const preventLinkDrag = (event: DragEvent) => {
       const target = event.target;
@@ -47,9 +55,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthProvider>
-      <Header />
+      <Header compact={hideFooter} />
       <main className="flex-1">{children}</main>
-      <Footer />
+      {!hideFooter && <Footer />}
     </AuthProvider>
   );
 }

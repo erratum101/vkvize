@@ -36,6 +36,7 @@ export interface QuizSettings {
   shuffleQuestions: boolean;
   showCorrectAfterQuestion: boolean;
   multiChoiceScoring: 'proportional' | 'all_or_nothing';
+  resultDisplaySec: number;
 }
 
 export const DEFAULT_QUIZ_SETTINGS: QuizSettings = {
@@ -43,6 +44,7 @@ export const DEFAULT_QUIZ_SETTINGS: QuizSettings = {
   shuffleQuestions: false,
   showCorrectAfterQuestion: true,
   multiChoiceScoring: 'proportional',
+  resultDisplaySec: 5,
 };
 
 export const WS_EVENTS = {
@@ -84,16 +86,23 @@ export interface QuestionState {
   correctOptionIds?: string[];
 }
 
+export interface AnswerStats {
+  answeredCount: number;
+  totalParticipants: number;
+}
+
 export interface SessionState {
   roomCode: string;
   phase: SessionPhase;
   status: SessionStatus;
   currentQuestionIndex: number;
   questionDeadline: number | null;
+  resultDeadline: number | null;
   currentQuestion: QuestionState | null;
   participants: SessionParticipantState[];
   quizTitle: string;
   totalQuestions: number;
+  answerStats: AnswerStats | null;
 }
 
 export interface LeaderboardEntry {

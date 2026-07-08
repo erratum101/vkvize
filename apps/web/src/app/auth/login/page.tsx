@@ -30,7 +30,7 @@ export default function LoginPage() {
               }
               setProfileError(undefined);
               setProfile(profile);
-              router.push('/dashboard');
+              router.push('/');
             }}
           />
         </CardBody>

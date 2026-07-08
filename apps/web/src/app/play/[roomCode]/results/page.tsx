@@ -35,7 +35,7 @@ export default function ResultsPage() {
   if (!data) return <div className="flex min-h-screen items-center justify-center"><Loader label="Загрузка результатов..." /></div>;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="vk-page mx-auto max-w-2xl px-4 py-6 sm:py-8">
       <Card>
         <CardHeader title="Итоги квиза" subtitle={data.quizTitle} />
         <CardBody>
@@ -44,7 +44,7 @@ export default function ResultsPage() {
             <Button variant="secondary" href="/join">
               Новый квиз
             </Button>
-            <Button href="/dashboard">В кабинет</Button>
+            <Button href="/">На главную</Button>
           </div>
         </CardBody>
       </Card>

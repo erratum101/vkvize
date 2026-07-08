@@ -6,6 +6,7 @@ import {
   DEFAULT_QUIZ_SETTINGS,
   LeaderboardEntry,
   SessionStatus,
+  AnswerStats,
 } from '@vkvize/shared';
 import { buildLeaderboard } from './scoring';
 
@@ -33,6 +34,9 @@ interface RuntimeSession {
   participants: Map<string, RuntimeParticipant>;
   organizerSocketId: string | null;
   answerTimer: NodeJS.Timeout | null;
+  resultTimer: NodeJS.Timeout | null;
+  resultDeadline: number | null;
+  answeredParticipantIds: Set<string>;
 }
 
 class SessionManager {
@@ -42,12 +46,15 @@ class SessionManager {
     return this.sessions.get(roomCode.toUpperCase());
   }
 
-  create(data: Omit<RuntimeSession, 'participants' | 'organizerSocketId' | 'answerTimer'>): RuntimeSession {
+  create(data: Omit<RuntimeSession, 'participants' | 'organizerSocketId' | 'answerTimer' | 'resultTimer' | 'resultDeadline' | 'answeredParticipantIds'>): RuntimeSession {
     const session: RuntimeSession = {
       ...data,
       participants: new Map(),
       organizerSocketId: null,
       answerTimer: null,
+      resultTimer: null,
+      resultDeadline: null,
+      answeredParticipantIds: new Set(),
     };
     this.sessions.set(data.roomCode.toUpperCase(), session);
     return session;
@@ -56,6 +63,7 @@ class SessionManager {
   remove(roomCode: string) {
     const session = this.get(roomCode);
     if (session?.answerTimer) clearTimeout(session.answerTimer);
+    if (session?.resultTimer) clearTimeout(session.resultTimer);
     this.sessions.delete(roomCode.toUpperCase());
   }
 
@@ -105,6 +113,47 @@ class SessionManager {
     }
   }
 
+  clearResultTimer(roomCode: string) {
+    const session = this.get(roomCode);
+    if (session?.resultTimer) {
+      clearTimeout(session.resultTimer);
+      session.resultTimer = null;
+    }
+  }
+
+  setResultTimer(roomCode: string, timer: NodeJS.Timeout) {
+    const session = this.get(roomCode);
+    if (session) {
+      this.clearResultTimer(roomCode);
+      session.resultTimer = timer;
+    }
+  }
+
+  resetAnswerStats(roomCode: string) {
+    const session = this.get(roomCode);
+    if (session) session.answeredParticipantIds = new Set();
+  }
+
+  recordAnswer(roomCode: string, participantId: string) {
+    const session = this.get(roomCode);
+    if (session) session.answeredParticipantIds.add(participantId);
+  }
+
+  getParticipantCount(session: RuntimeSession) {
+    return [...session.participants.values()].filter((p) => !p.isOrganizer).length;
+  }
+
+  getAnswerStats(session: RuntimeSession): AnswerStats | null {
+    if (session.phase !== SessionPhase.ANSWERING && session.phase !== SessionPhase.QUESTION_RESULT) {
+      return null;
+    }
+    const totalParticipants = this.getParticipantCount(session);
+    return {
+      answeredCount: session.answeredParticipantIds.size,
+      totalParticipants,
+    };
+  }
+
   toState(session: RuntimeSession): SessionState {
     const currentQuestion =
       session.currentQuestionIndex >= 0 && session.currentQuestionIndex < session.questions.length
@@ -122,6 +171,7 @@ class SessionManager {
             : SessionStatus.IN_PROGRESS,
       currentQuestionIndex: session.currentQuestionIndex,
       questionDeadline: session.questionDeadline,
+      resultDeadline: session.resultDeadline,
       currentQuestion,
       participants: [...session.participants.values()]
         .filter((p) => !p.isOrganizer)
@@ -133,6 +183,7 @@ class SessionManager {
         })),
       quizTitle: session.quizTitle,
       totalQuestions: session.questions.length,
+      answerStats: this.getAnswerStats(session),
     };
   }
 
