@@ -103,6 +103,9 @@ export interface SessionState {
   quizTitle: string;
   totalQuestions: number;
   answerStats: AnswerStats | null;
+  serverTime: number;
+  questionTimeLeftSec: number | null;
+  resultTimeLeftSec: number | null;
 }
 
 export interface LeaderboardEntry {

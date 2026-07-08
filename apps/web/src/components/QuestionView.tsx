@@ -54,16 +54,9 @@ export function QuestionView({ question, phase, timeLeft, disabled, onSubmit }: 
           {question.text}
         </h2>
         {timeLeft !== null && phase === SessionPhase.ANSWERING && (
-          <div
-            className={`vk-timer-badge shrink-0 self-start ${
-              timeLeft <= 5 ? 'is-urgent' : ''
-            }`}
-          >
-            <span className="vk-timer-icon" aria-hidden>
-              ⏱
-            </span>
-            <span className="text-xl font-bold tabular-nums sm:text-2xl">{timeLeft}с</span>
-          </div>
+          <span className="shrink-0 self-start text-base tabular-nums text-[var(--vk-text-secondary)] sm:text-lg">
+            {timeLeft}с
+          </span>
         )}
       </div>
 

@@ -85,7 +85,7 @@ function PlayContent() {
                 await submitAnswer(sessionState.currentQuestion!.id, ids);
               }}
             />
-            {phase === SessionPhase.QUESTION_RESULT && resultTimeLeft !== null && (
+            {phase === SessionPhase.QUESTION_RESULT && resultTimeLeft !== null && resultTimeLeft > 0 && (
               <p className="mt-4 text-center text-sm text-[var(--vk-text-secondary)]">
                 Следующий вопрос через {resultTimeLeft}с
               </p>

@@ -127,7 +127,7 @@ export function Header({ compact = false }: { compact?: boolean }) {
   return (
     <header className="vk-header">
       <div className={`vk-header-surface ${scrolled ? 'is-scrolled' : ''}`}>
-        <div className={`relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-4 sm:px-4 ${compact ? 'max-w-4xl' : ''}`}>
+        <div className={`relative mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4 ${compact ? 'md:max-w-4xl' : ''}`}>
           <Link
             href="/"
             draggable={false}

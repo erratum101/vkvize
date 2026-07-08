@@ -99,15 +99,15 @@ export default function OrganizerSessionPage() {
 
             {phase === SessionPhase.ANSWERING && timeLeft !== null && (
               <div className="rounded-[var(--vk-radius-md)] bg-[var(--vk-bg-hover)] px-4 py-3 text-center">
-                <p className="text-xs uppercase tracking-wide text-[var(--vk-text-secondary)]">До конца вопроса</p>
-                <p className="text-3xl font-bold tabular-nums text-[var(--vk-primary)]">{timeLeft}с</p>
+                <p className="text-xs text-[var(--vk-text-secondary)]">До конца вопроса</p>
+                <p className="text-2xl tabular-nums text-[var(--vk-text-primary)]">{timeLeft}с</p>
               </div>
             )}
 
             {phase === SessionPhase.QUESTION_RESULT && resultTimeLeft !== null && (
               <div className="rounded-[var(--vk-radius-md)] bg-[var(--vk-bg-hover)] px-4 py-3 text-center">
-                <p className="text-xs uppercase tracking-wide text-[var(--vk-text-secondary)]">До следующего вопроса</p>
-                <p className="text-3xl font-bold tabular-nums text-[var(--vk-primary)]">{resultTimeLeft}с</p>
+                <p className="text-xs text-[var(--vk-text-secondary)]">До следующего вопроса</p>
+                <p className="text-2xl tabular-nums text-[var(--vk-text-primary)]">{resultTimeLeft}с</p>
               </div>
             )}
 
@@ -156,7 +156,7 @@ export default function OrganizerSessionPage() {
         <Card>
           <CardHeader title="Лидерборд" />
           <CardBody>
-            <Leaderboard entries={leaderboard} />
+            <Leaderboard entries={leaderboard} showHero={phase === SessionPhase.FINISHED} />
           </CardBody>
         </Card>
       )}

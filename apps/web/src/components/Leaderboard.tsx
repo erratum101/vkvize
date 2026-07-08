@@ -1,80 +1,174 @@
 'use client';
 
+import Image from 'next/image';
 import { LeaderboardEntry } from '@vkvize/shared';
 import { Avatar } from './Avatar';
 
-const MEDALS = ['🥇', '🥈', '🥉'] as const;
-const HEIGHTS = ['h-36', 'h-28', 'h-20'] as const;
+const PODIUM_STYLES: Record<number, { medal: string; bar: string; glow: string; delay: string }> = {
+  1: {
+    medal: '🥇',
+    bar: 'vk-lb-podium--gold',
+    glow: 'vk-lb-podium-glow--gold',
+    delay: 'vk-lb-delay-2',
+  },
+  2: {
+    medal: '🥈',
+    bar: 'vk-lb-podium--silver',
+    glow: 'vk-lb-podium-glow--silver',
+    delay: 'vk-lb-delay-1',
+  },
+  3: {
+    medal: '🥉',
+    bar: 'vk-lb-podium--bronze',
+    glow: 'vk-lb-podium-glow--bronze',
+    delay: 'vk-lb-delay-3',
+  },
+};
 
-export function Leaderboard({ entries, highlightId }: { entries: LeaderboardEntry[]; highlightId?: string }) {
+const PODIUM_HEIGHTS: Record<number, string> = {
+  1: 'h-36 sm:h-40',
+  2: 'h-28 sm:h-32',
+  3: 'h-20 sm:h-24',
+};
+
+function buildPodiumLayout(top3: LeaderboardEntry[]) {
+  if (top3.length === 1) {
+    return [{ entry: top3[0], rank: 1 as const }];
+  }
+  if (top3.length === 2) {
+    return [
+      { entry: top3[1], rank: 2 as const },
+      { entry: top3[0], rank: 1 as const },
+    ];
+  }
+  return [
+    { entry: top3[1], rank: 2 as const },
+    { entry: top3[0], rank: 1 as const },
+    { entry: top3[2], rank: 3 as const },
+  ];
+}
+
+export function Leaderboard({
+  entries,
+  highlightId,
+  showHero = true,
+}: {
+  entries: LeaderboardEntry[];
+  highlightId?: string;
+  showHero?: boolean;
+}) {
   const top3 = entries.filter((entry) => entry.rank <= 3).sort((a, b) => a.rank - b.rank);
-
-  const podiumLayout =
-    top3.length === 1
-      ? [{ entry: top3[0], height: 'h-32', medal: MEDALS[0] }]
-      : top3.length === 2
-        ? [
-            { entry: top3[1], height: HEIGHTS[1], medal: MEDALS[1] },
-            { entry: top3[0], height: HEIGHTS[0], medal: MEDALS[0] },
-          ]
-        : [
-            { entry: top3[1], height: HEIGHTS[1], medal: MEDALS[1] },
-            { entry: top3[0], height: HEIGHTS[0], medal: MEDALS[0] },
-            { entry: top3[2], height: HEIGHTS[2], medal: MEDALS[2] },
-          ];
+  const podiumLayout = buildPodiumLayout(top3);
+  const winner = top3.find((e) => e.rank === 1);
 
   return (
-    <div className="space-y-6">
-      {podiumLayout.length > 0 && (
-        <div className="flex items-end justify-center gap-3 py-2 sm:gap-4 sm:py-4">
-          {podiumLayout.map(({ entry, height, medal }) => (
-            <div key={entry.participantId} className="flex w-20 flex-col items-center sm:w-24">
-              <span className="mb-1 text-2xl">{medal}</span>
-              <div
-                className={`w-full ${height} flex flex-col items-center justify-end rounded-t-[var(--vk-radius-md)] bg-[var(--vk-primary)] pb-3 text-white`}
-              >
-                <Avatar name={entry.name} avatarUrl={entry.avatarUrl} size="md" className="mb-2 ring-white/80" />
-                <span className="text-lg font-bold">{entry.totalScore}</span>
-              </div>
-              <p className="mt-2 w-full truncate text-center text-sm font-medium">{entry.name}</p>
-            </div>
+    <div className={`vk-leaderboard ${showHero ? '' : 'vk-leaderboard--compact'}`}>
+      {showHero && (
+      <div className="vk-lb-hero">
+        <div className="vk-lb-confetti" aria-hidden>
+          {Array.from({ length: 12 }).map((_, i) => (
+            <span key={i} className={`vk-lb-confetti-piece vk-lb-confetti-piece--${(i % 6) + 1}`} />
           ))}
+        </div>
+        <div className="vk-lb-hero-art">
+          <Image
+            src="/design/vk-illustration-leaderboard.png"
+            alt=""
+            width={280}
+            height={200}
+            className="vk-lb-hero-image"
+            unoptimized
+          />
+        </div>
+        <div className="vk-lb-hero-text">
+          <p className="vk-lb-eyebrow">Финиш!</p>
+          <h3 className="vk-lb-title">Лидерборд</h3>
+          {winner && (
+            <p className="vk-lb-winner-line">
+              Победитель: <span>{winner.name}</span>
+            </p>
+          )}
+        </div>
+      </div>
+      )}
+
+      {podiumLayout.length > 0 && (
+        <div className="vk-lb-podium-stage">
+          {podiumLayout.map(({ entry, rank }) => {
+            const style = PODIUM_STYLES[rank];
+            const isWinner = rank === 1;
+            return (
+              <div
+                key={entry.participantId}
+                className={`vk-lb-podium-col ${style.delay} ${isWinner ? 'vk-lb-podium-col--winner' : ''}`}
+              >
+                <span className={`vk-lb-medal ${style.delay}`}>{style.medal}</span>
+                <div className={`vk-lb-podium-glow ${style.glow}`} aria-hidden />
+                <div
+                  className={`vk-lb-podium-bar ${style.bar} ${PODIUM_HEIGHTS[rank]} ${
+                    entry.participantId === highlightId ? 'vk-lb-podium-bar--you' : ''
+                  }`}
+                >
+                  {isWinner && <span className="vk-lb-crown" aria-hidden>👑</span>}
+                  <Avatar
+                    name={entry.name}
+                    avatarUrl={entry.avatarUrl}
+                    size={isWinner ? 'lg' : 'md'}
+                    className="vk-lb-podium-avatar"
+                  />
+                  <span className="vk-lb-podium-score">{entry.totalScore}</span>
+                  <span className="vk-lb-podium-points">баллов</span>
+                </div>
+                <p className="vk-lb-podium-name">{entry.name}</p>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      <div className="overflow-x-auto overflow-hidden rounded-[var(--vk-radius-md)] border border-[var(--vk-border-light)]">
-        <table className="w-full min-w-[280px] text-sm">
-          <thead className="bg-[var(--vk-bg-hover)]">
+      <div className="vk-lb-table-wrap">
+        <table className="vk-lb-table">
+          <thead>
             <tr>
-              <th className="px-3 py-3 text-left sm:px-4">#</th>
-              <th className="px-3 py-3 text-left sm:px-4">Участник</th>
-              <th className="px-3 py-3 text-right sm:px-4">Баллы</th>
+              <th>#</th>
+              <th>Участник</th>
+              <th className="text-right">Баллы</th>
             </tr>
           </thead>
           <tbody>
-            {entries.map((e) => (
-              <tr
-                key={e.participantId}
-                className={`border-t border-[var(--vk-border-light)] ${
-                  e.participantId === highlightId ? 'bg-[var(--vk-primary)]/10' : ''
-                }`}
-              >
-                <td className="px-3 py-3 text-[var(--vk-text-secondary)] sm:px-4">{e.rank}</td>
-                <td className="px-3 py-3 font-medium sm:px-4">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <Avatar name={e.name} avatarUrl={e.avatarUrl} size="sm" />
-                    <span className="truncate">{e.name}</span>
-                  </div>
-                </td>
-                <td className="px-3 py-3 text-right font-semibold text-[var(--vk-primary)] sm:px-4">
-                  {e.totalScore}
-                </td>
-              </tr>
-            ))}
+            {entries.map((entry, index) => {
+              const isYou = entry.participantId === highlightId;
+              const isTop = entry.rank <= 3;
+              return (
+                <tr
+                  key={entry.participantId}
+                  className={`vk-lb-row vk-lb-row--in ${isYou ? 'vk-lb-row--you' : ''} ${
+                    isTop ? `vk-lb-row--top${entry.rank}` : ''
+                  }`}
+                  style={{ animationDelay: `${120 + index * 70}ms` }}
+                >
+                  <td>
+                    <span className={`vk-lb-rank ${isTop ? `vk-lb-rank--${entry.rank}` : ''}`}>
+                      {isTop ? PODIUM_STYLES[entry.rank as 1 | 2 | 3].medal : entry.rank}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <Avatar name={entry.name} avatarUrl={entry.avatarUrl} size="sm" />
+                      <span className="truncate font-medium">{entry.name}</span>
+                      {isYou && <span className="vk-lb-you-badge">вы</span>}
+                    </div>
+                  </td>
+                  <td className="text-right">
+                    <span className="vk-lb-score">{entry.totalScore}</span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         {entries.length === 0 && (
-          <p className="py-8 text-center text-[var(--vk-text-secondary)]">Нет участников</p>
+          <p className="py-10 text-center text-[var(--vk-text-secondary)]">Нет участников</p>
         )}
       </div>
     </div>

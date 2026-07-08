@@ -72,6 +72,8 @@ async function showNextQuestion(io: Server, roomCode: string) {
   session.questionDeadline = Date.now() + question.timeLimitSec * 1000;
   session.resultDeadline = null;
 
+  emitState(io, roomCode);
+
   await prisma.quizSession.update({
     where: { id: session.sessionId },
     data: {
@@ -81,8 +83,6 @@ async function showNextQuestion(io: Server, roomCode: string) {
       startedAt: nextIndex === 0 ? new Date() : undefined,
     },
   });
-
-  emitState(io, roomCode);
 
   sessionManager.setAnswerTimer(
     roomCode,
@@ -115,13 +115,13 @@ async function closeQuestion(io: Server, roomCode: string) {
   const resultDisplaySec = getResultDisplaySec(session.settings);
   session.resultDeadline = Date.now() + resultDisplaySec * 1000;
 
+  emitState(io, roomCode);
+  emitLeaderboard(io, roomCode);
+
   await prisma.quizSession.update({
     where: { id: session.sessionId },
     data: { phase: SessionPhase.QUESTION_RESULT },
   });
-
-  emitState(io, roomCode);
-  emitLeaderboard(io, roomCode);
 
   sessionManager.setResultTimer(
     roomCode,
@@ -153,6 +153,7 @@ function ensureQuestionTiming(io: Server, roomCode: string) {
           roomCode,
           setTimeout(() => closeQuestion(io, roomCode), question.timeLimitSec * 1000)
         );
+        emitState(io, roomCode);
       }
       return;
     }
@@ -170,7 +171,18 @@ function ensureQuestionTiming(io: Server, roomCode: string) {
     return;
   }
 
-  if (session.phase === SessionPhase.QUESTION_RESULT && session.resultDeadline) {
+  if (session.phase === SessionPhase.QUESTION_RESULT) {
+    if (!session.resultDeadline) {
+      const resultDisplaySec = getResultDisplaySec(session.settings);
+      session.resultDeadline = Date.now() + resultDisplaySec * 1000;
+      sessionManager.setResultTimer(
+        roomCode,
+        setTimeout(() => advanceAfterResult(io, roomCode), resultDisplaySec * 1000)
+      );
+      emitState(io, roomCode);
+      return;
+    }
+
     const remainingMs = session.resultDeadline - Date.now();
     if (remainingMs <= 0) {
       void advanceAfterResult(io, roomCode);

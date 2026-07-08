@@ -1,7 +1,7 @@
 export function HourglassWaiting({ label }: { label?: string }) {
   return (
     <div className="flex flex-col items-center py-6">
-      <div className="vk-hourglass mb-4" aria-hidden>
+      <div className="mb-4" aria-hidden>
         <span className="vk-hourglass-icon">⏳</span>
       </div>
       <p className="text-lg font-medium">{label ?? 'Ожидание начала квиза'}</p>

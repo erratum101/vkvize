@@ -7,10 +7,16 @@ import {
   SessionState,
   LeaderboardEntry,
   SessionPhase,
+  DEFAULT_QUIZ_SETTINGS,
 } from '@vkvize/shared';
 import { LocalProfile } from '@/lib/local-profile';
 import { getWsUrl } from '@/lib/service-url';
 import { useCountdown } from './useCountdown';
+
+function syncDeadlineFromServerSeconds(seconds: number | null | undefined, fallbackSec: number) {
+  const remaining = seconds != null && Number.isFinite(seconds) ? Math.max(0, seconds) : fallbackSec;
+  return Date.now() + remaining * 1000;
+}
 
 export function useQuizSession(roomCode: string, role: 'organizer' | 'participant', profile?: LocalProfile | null) {
   const [connected, setConnected] = useState(false);
@@ -18,7 +24,72 @@ export function useQuizSession(roomCode: string, role: 'organizer' | 'participan
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [answerDeadline, setAnswerDeadline] = useState<number | null>(null);
+  const [resultDeadlineLocal, setResultDeadlineLocal] = useState<number | null>(null);
+  const prevPhaseRef = useRef<SessionPhase | undefined>(undefined);
+  const prevQuestionIndexRef = useRef(-1);
   const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    if (!sessionState) {
+      setAnswerDeadline(null);
+      setResultDeadlineLocal(null);
+      prevPhaseRef.current = undefined;
+      prevQuestionIndexRef.current = -1;
+      return;
+    }
+
+    const { phase, currentQuestionIndex, currentQuestion } = sessionState;
+    const enteredAnswering =
+      phase === SessionPhase.ANSWERING &&
+      (prevPhaseRef.current !== SessionPhase.ANSWERING || prevQuestionIndexRef.current !== currentQuestionIndex);
+    const enteredResult =
+      phase === SessionPhase.QUESTION_RESULT &&
+      (prevPhaseRef.current !== SessionPhase.QUESTION_RESULT || prevQuestionIndexRef.current !== currentQuestionIndex);
+
+    if (enteredAnswering && currentQuestion) {
+      setAnswerDeadline(
+        syncDeadlineFromServerSeconds(
+          sessionState.questionTimeLeftSec,
+          currentQuestion.timeLimitSec
+        )
+      );
+      setResultDeadlineLocal(null);
+    } else if (enteredResult) {
+      const sec = sessionState.resultTimeLeftSec;
+      const initialSec = sec != null && sec > 0 ? sec : DEFAULT_QUIZ_SETTINGS.resultDisplaySec;
+      setResultDeadlineLocal(Date.now() + initialSec * 1000);
+      setAnswerDeadline(null);
+    } else if (phase === SessionPhase.QUESTION_RESULT && sessionState.resultTimeLeftSec != null) {
+      setResultDeadlineLocal((prev) => {
+        const next = syncDeadlineFromServerSeconds(
+          sessionState.resultTimeLeftSec,
+          DEFAULT_QUIZ_SETTINGS.resultDisplaySec
+        );
+        if (!prev) return next;
+        const prevSec = Math.ceil((prev - Date.now()) / 1000);
+        const nextSec = sessionState.resultTimeLeftSec ?? 0;
+        return nextSec > prevSec ? next : prev;
+      });
+    } else if (phase === SessionPhase.ANSWERING && sessionState.questionTimeLeftSec != null) {
+      setAnswerDeadline((prev) => {
+        const next = syncDeadlineFromServerSeconds(
+          sessionState.questionTimeLeftSec,
+          currentQuestion?.timeLimitSec ?? DEFAULT_QUIZ_SETTINGS.resultDisplaySec
+        );
+        if (!prev) return next;
+        const prevSec = Math.ceil((prev - Date.now()) / 1000);
+        const nextSec = sessionState.questionTimeLeftSec ?? 0;
+        return nextSec > prevSec ? next : prev;
+      });
+    } else if (phase !== SessionPhase.ANSWERING && phase !== SessionPhase.QUESTION_RESULT) {
+      setAnswerDeadline(null);
+      setResultDeadlineLocal(null);
+    }
+
+    prevPhaseRef.current = phase;
+    prevQuestionIndexRef.current = currentQuestionIndex;
+  }, [sessionState]);
 
   useEffect(() => {
     if (!roomCode) return;
@@ -94,18 +165,8 @@ export function useQuizSession(roomCode: string, role: 'organizer' | 'participan
     });
   }, []);
 
-  const answerTimeLeft = useCountdown(
-    sessionState?.phase === SessionPhase.ANSWERING ? sessionState.questionDeadline : null
-  );
-  const resultTimeLeft = useCountdown(
-    sessionState?.phase === SessionPhase.QUESTION_RESULT ? sessionState.resultDeadline : null
-  );
-
-  const timeLeft =
-    sessionState?.phase === SessionPhase.ANSWERING
-      ? answerTimeLeft ??
-        (sessionState.currentQuestion ? sessionState.currentQuestion.timeLimitSec : null)
-      : null;
+  const timeLeft = useCountdown(answerDeadline);
+  const resultTimeLeft = useCountdown(resultDeadlineLocal);
 
   return {
     connected,

@@ -160,6 +160,16 @@ class SessionManager {
         ? this.sanitizeQuestion(session, session.questions[session.currentQuestionIndex])
         : null;
 
+    const now = Date.now();
+    const questionTimeLeftSec =
+      session.phase === SessionPhase.ANSWERING && session.questionDeadline
+        ? Math.max(0, Math.ceil((session.questionDeadline - now) / 1000))
+        : null;
+    const resultTimeLeftSec =
+      session.phase === SessionPhase.QUESTION_RESULT && session.resultDeadline
+        ? Math.max(0, Math.ceil((session.resultDeadline - now) / 1000))
+        : null;
+
     return {
       roomCode: session.roomCode,
       phase: session.phase,
@@ -184,6 +194,9 @@ class SessionManager {
       quizTitle: session.quizTitle,
       totalQuestions: session.questions.length,
       answerStats: this.getAnswerStats(session),
+      serverTime: now,
+      questionTimeLeftSec,
+      resultTimeLeftSec,
     };
   }
 
