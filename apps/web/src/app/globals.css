@@ -703,3 +703,218 @@ main {
 .vk-checkbox__input:checked + .vk-checkbox__box .vk-checkbox__icon {
   opacity: 1;
 }
+
+/* Results breakdown */
+.vk-results-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.vk-results-breakdown-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.vk-results-breakdown-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--vk-text-primary);
+}
+
+.vk-results-breakdown-subtitle {
+  font-size: 0.875rem;
+  color: var(--vk-text-secondary);
+}
+
+.vk-results-table-wrap {
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid var(--vk-border-light);
+  background: #fff;
+  box-shadow: var(--vk-shadow-sm);
+}
+
+.vk-results-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+
+.vk-results-table thead {
+  background: linear-gradient(90deg, rgba(0, 119, 255, 0.08), rgba(228, 33, 211, 0.08));
+}
+
+.vk-results-table th,
+.vk-results-table td {
+  padding: 0.75rem 0.65rem;
+  border-bottom: 1px solid var(--vk-border-light);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.vk-results-table th {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vk-text-secondary);
+}
+
+.vk-results-table-sticky {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 11rem;
+  text-align: left;
+  background: #fff;
+  box-shadow: inset -1px 0 0 var(--vk-border-light);
+}
+
+.vk-results-table thead .vk-results-table-sticky {
+  background: #f7f9fc;
+}
+
+.vk-results-table-total {
+  min-width: 4.5rem;
+  font-weight: 800;
+  color: var(--vk-primary);
+}
+
+.vk-results-q-index {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--vk-text-primary);
+}
+
+.vk-results-q-points {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--vk-text-secondary);
+}
+
+.vk-results-participant {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.vk-results-cell {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.vk-results-cell--correct {
+  background: rgba(75, 179, 75, 0.14);
+  color: #2f9e44;
+}
+
+.vk-results-cell--wrong {
+  background: rgba(230, 70, 70, 0.12);
+  color: var(--vk-danger);
+}
+
+.vk-results-cell--missed {
+  background: var(--vk-bg-secondary);
+  color: var(--vk-text-secondary);
+}
+
+.vk-results-total-score {
+  display: inline-block;
+  min-width: 2.5rem;
+  border-radius: 9999px;
+  background: rgba(0, 119, 255, 0.08);
+  padding: 0.2rem 0.55rem;
+}
+
+.vk-results-questions-list {
+  display: none;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.vk-results-question-card {
+  border-radius: 16px;
+  border: 1px solid var(--vk-border-light);
+  background: #fff;
+  padding: 1rem;
+  box-shadow: var(--vk-shadow-sm);
+}
+
+.vk-results-question-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.vk-results-question-badge {
+  display: inline-flex;
+  border-radius: 9999px;
+  background: rgba(0, 119, 255, 0.08);
+  padding: 0.2rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--vk-primary);
+}
+
+.vk-results-question-meta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--vk-text-secondary);
+}
+
+.vk-results-question-text {
+  margin-top: 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--vk-text-primary);
+}
+
+.vk-results-question-stats {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--vk-text-secondary);
+}
+
+.vk-results-question-participants {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.vk-results-question-participant {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border-radius: 12px;
+  background: var(--vk-bg-secondary);
+  padding: 0.55rem 0.7rem;
+}
+
+.vk-results-question-participant span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  .vk-results-table-wrap {
+    display: none;
+  }
+
+  .vk-results-questions-list {
+    display: flex;
+  }
+}

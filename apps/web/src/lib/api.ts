@@ -1,3 +1,4 @@
+import { SessionResultsDetail } from '@vkvize/shared';
 import { getProfileHeaders } from './local-profile';
 import { getApiUrl } from './service-url';
 
@@ -80,10 +81,7 @@ export const api = {
   },
   sessions: {
     get: (roomCode: string) => request<SessionInfo>(`/api/sessions/${roomCode}`),
-    results: (roomCode: string) =>
-      request<{ quizTitle: string; leaderboard: LeaderboardEntry[] }>(
-        `/api/sessions/${roomCode}/results`
-      ),
+    results: (roomCode: string) => request<SessionResultsDetail>(`/api/sessions/${roomCode}/results`),
   },
   upload: async (file: File) => {
     const form = new FormData();

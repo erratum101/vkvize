@@ -116,6 +116,38 @@ export interface LeaderboardEntry {
   rank: number;
 }
 
+export interface ResultQuestionSummary {
+  id: string;
+  order: number;
+  text: string;
+  points: number;
+}
+
+export interface ResultParticipantAnswer {
+  questionId: string;
+  isCorrect: boolean;
+  pointsEarned: number;
+  answered: boolean;
+  selectedOptionIds: string[];
+}
+
+export interface ResultParticipantDetail {
+  participantId: string;
+  name: string;
+  avatarUrl?: string | null;
+  totalScore: number;
+  rank: number;
+  answers: ResultParticipantAnswer[];
+}
+
+export interface SessionResultsDetail {
+  quizTitle: string;
+  roomCode: string;
+  leaderboard: LeaderboardEntry[];
+  questions: ResultQuestionSummary[];
+  participants: ResultParticipantDetail[];
+}
+
 export interface JoinSessionPayload {
   roomCode: string;
   profileId?: string;
