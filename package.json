@@ -1,6 +1,9 @@
 {
   "name": "vkvize",
   "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
