@@ -4,7 +4,8 @@ import { ReactNode, useState } from 'react';
 import { Avatar } from './Avatar';
 import { Button } from './Button';
 import { Input } from './Input';
-import { LocalProfile, fileToDataUrl } from '@/lib/local-profile';
+import { api } from '@/lib/api';
+import { compressImageFile, isDataUrl, LocalProfile } from '@/lib/local-profile';
 
 interface ProfileFormProps {
   title?: string;
@@ -26,6 +27,22 @@ const avatarPresets = [
   'https://api.dicebear.com/9.x/thumbs/svg?seed=QuizBear&backgroundColor=7b61ff',
 ];
 
+async function uploadAvatarFile(file: File) {
+  const compressed = await compressImageFile(file);
+  const { url } = await api.upload(compressed);
+  return url;
+}
+
+async function ensureRemoteAvatarUrl(avatarUrl: string | null) {
+  if (!avatarUrl) return null;
+  if (!isDataUrl(avatarUrl)) return avatarUrl;
+
+  const response = await fetch(avatarUrl);
+  const blob = await response.blob();
+  const file = new File([blob], 'avatar.jpg', { type: blob.type || 'image/jpeg' });
+  return uploadAvatarFile(file);
+}
+
 export function ProfileForm({
   title = 'Как вас представить?',
   subtitle = 'Введите имя и выберите аватарку. Если не выбрать картинку, покажем первую букву на уникальном цвете.',
@@ -40,17 +57,31 @@ export function ProfileForm({
   const [name, setName] = useState(initialProfile?.name ?? '');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialProfile?.avatarUrl ?? null);
   const [loading, setLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string>();
 
   const handleFile = async (file?: File) => {
     if (!file) return;
-    setAvatarUrl(await fileToDataUrl(file));
+    setAvatarError(undefined);
+    setUploadingAvatar(true);
+    try {
+      setAvatarUrl(await uploadAvatarFile(file));
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : 'Не удалось загрузить аватарку');
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setAvatarError(undefined);
     try {
-      await onSubmit({ id: initialProfile?.id, name, avatarUrl });
+      const remoteAvatarUrl = await ensureRemoteAvatarUrl(avatarUrl);
+      await onSubmit({ id: initialProfile?.id, name, avatarUrl: remoteAvatarUrl });
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : 'Не удалось сохранить аватарку');
     } finally {
       setLoading(false);
     }
@@ -101,14 +132,21 @@ export function ProfileForm({
           ))}
         </div>
         <label className="inline-flex cursor-pointer items-center rounded-[var(--vk-radius-sm)] bg-[var(--vk-bg-hover)] px-4 py-2 text-sm font-medium text-[var(--vk-primary)] hover:bg-[var(--vk-border-light)]">
-          Загрузить свою
-          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
+          {uploadingAvatar ? 'Загрузка...' : 'Загрузить свою'}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            disabled={uploadingAvatar || loading}
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
         </label>
+        {avatarError && <p className="text-sm text-[var(--vk-danger)]">{avatarError}</p>}
       </div>
 
       {children}
 
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button type="submit" className="w-full" disabled={loading || uploadingAvatar}>
         {loading ? submittingLabel : submitLabel}
       </Button>
     </form>

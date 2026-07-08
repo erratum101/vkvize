@@ -93,7 +93,10 @@ export const api = {
       headers: getProfileHeaders(),
       body: form,
     });
-    if (!res.ok) throw new Error('Upload failed');
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: 'Upload failed' }));
+      throw new Error(formatApiError(body.error, res.status));
+    }
     return res.json() as Promise<{ url: string }>;
   },
 };

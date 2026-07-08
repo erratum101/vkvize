@@ -45,13 +45,19 @@ function UserMenu() {
     >
       <button
         type="button"
-        className="flex items-center gap-2 rounded-full py-1 pl-1 pr-1 transition-[var(--vk-transition)] group-hover:pr-3"
+        className={`flex items-center gap-2 rounded-full py-1 pl-1 pr-1 transition-[var(--vk-transition)] group-hover:pr-3 ${
+          open ? 'pr-3' : ''
+        }`}
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((v) => !v)}
       >
         <Avatar name={user.name} avatarUrl={user.avatarUrl} size="sm" className="shrink-0" />
-        <span className="hidden max-w-24 truncate text-sm font-medium text-[var(--vk-text-primary)] sm:block sm:max-w-40">
+        <span
+          className={`max-w-0 overflow-hidden truncate text-sm font-medium text-[var(--vk-text-primary)] opacity-0 transition-all duration-200 group-hover:max-w-40 group-hover:opacity-100 ${
+            open ? 'max-w-40 opacity-100' : ''
+          }`}
+        >
           {user.name}
         </span>
       </button>

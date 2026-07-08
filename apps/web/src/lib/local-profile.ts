@@ -89,11 +89,63 @@ export function clearProfile() {
 export function getProfileHeaders(): Record<string, string> {
   const profile = getStoredProfile();
   if (!profile?.id || !profile.name) return {};
-  return {
+
+  const headers: Record<string, string> = {
     'x-profile-id': profile.id,
     'x-profile-name': encodeURIComponent(profile.name),
-    ...(profile.avatarUrl ? { 'x-profile-avatar': encodeURIComponent(profile.avatarUrl) } : {}),
   };
+
+  const avatar = profile.avatarUrl;
+  if (
+    avatar &&
+    !avatar.startsWith('data:') &&
+    avatar.length <= 2048 &&
+    (avatar.startsWith('http://') || avatar.startsWith('https://'))
+  ) {
+    headers['x-profile-avatar'] = encodeURIComponent(avatar);
+  }
+
+  return headers;
+}
+
+export function isDataUrl(url?: string | null): url is string {
+  return Boolean(url?.startsWith('data:'));
+}
+
+export async function compressImageFile(
+  file: File,
+  maxDimension = 512,
+  quality = 0.85
+): Promise<File> {
+  if (!file.type.startsWith('image/')) return file;
+
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    bitmap.close();
+    return file;
+  }
+
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (result) => (result ? resolve(result) : reject(new Error('Не удалось сжать изображение'))),
+      'image/jpeg',
+      quality
+    );
+  });
+
+  const baseName = file.name.replace(/\.[^.]+$/, '') || 'avatar';
+  return new File([blob], `${baseName}.jpg`, { type: 'image/jpeg' });
 }
 
 export function fileToDataUrl(file: File): Promise<string> {
