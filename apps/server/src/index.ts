@@ -13,7 +13,7 @@ import { setupSocket } from './socket';
 
 const app = express();
 const server = http.createServer(app);
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT) || 4000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000';
 
 const configuredOrigins = CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
