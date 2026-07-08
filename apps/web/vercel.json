@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd ../.. && npm install && npm run build -w @vkvize/shared && npm run build -w @vkvize/web",
+  "outputDirectory": ".next",
+  "installCommand": "cd ../.. && npm install",
+  "framework": "nextjs",
+  "devCommand": "npm run dev"
+}

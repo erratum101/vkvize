@@ -1,0 +1,29 @@
+{
+  "name": "vkvize",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w @vkvize/server\" \"npm run dev -w @vkvize/web\"",
+    "dev:web": "npm run dev -w @vkvize/web",
+    "dev:server": "npm run dev -w @vkvize/server",
+    "build": "npm run build -w @vkvize/shared && npm run build -w @vkvize/server && npm run build -w @vkvize/web",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.9.0",
+    "concurrently": "^9.1.2",
+    "prisma": "^6.9.0",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}
