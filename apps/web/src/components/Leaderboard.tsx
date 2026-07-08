@@ -1,28 +1,14 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { LeaderboardEntry } from '@vkvize/shared';
 import { Avatar } from './Avatar';
 
-const PODIUM_STYLES: Record<number, { medal: string; bar: string; glow: string; delay: string }> = {
-  1: {
-    medal: '🥇',
-    bar: 'vk-lb-podium--gold',
-    glow: 'vk-lb-podium-glow--gold',
-    delay: 'vk-lb-delay-2',
-  },
-  2: {
-    medal: '🥈',
-    bar: 'vk-lb-podium--silver',
-    glow: 'vk-lb-podium-glow--silver',
-    delay: 'vk-lb-delay-1',
-  },
-  3: {
-    medal: '🥉',
-    bar: 'vk-lb-podium--bronze',
-    glow: 'vk-lb-podium-glow--bronze',
-    delay: 'vk-lb-delay-3',
-  },
+const PODIUM_STYLES: Record<number, { medal: string; bar: string; glow: string }> = {
+  1: { medal: '🥇', bar: 'vk-lb-podium--gold', glow: 'vk-lb-podium-glow--gold' },
+  2: { medal: '🥈', bar: 'vk-lb-podium--silver', glow: 'vk-lb-podium-glow--silver' },
+  3: { medal: '🥉', bar: 'vk-lb-podium--bronze', glow: 'vk-lb-podium-glow--bronze' },
 };
 
 const PODIUM_HEIGHTS: Record<number, string> = {
@@ -30,6 +16,11 @@ const PODIUM_HEIGHTS: Record<number, string> = {
   2: 'h-28 sm:h-32',
   3: 'h-20 sm:h-24',
 };
+
+// Suspenseful reveal order: 3rd place first, then 2nd, then the winner last.
+const REVEAL_ORDER = [3, 2, 1];
+const REVEAL_START_MS = 300;
+const REVEAL_STEP_MS = 700;
 
 function buildPodiumLayout(top3: LeaderboardEntry[]) {
   if (top3.length === 1) {
@@ -48,6 +39,48 @@ function buildPodiumLayout(top3: LeaderboardEntry[]) {
   ];
 }
 
+function useSequentialReveal(ranks: number[]) {
+  const key = ranks.join(',');
+  const [revealed, setRevealed] = useState<number[]>([]);
+
+  useEffect(() => {
+    setRevealed([]);
+    if (!ranks.length) return;
+    const timers = ranks.map((rank, i) =>
+      setTimeout(() => {
+        setRevealed((prev) => (prev.includes(rank) ? prev : [...prev, rank]));
+      }, REVEAL_START_MS + i * REVEAL_STEP_MS)
+    );
+    return () => timers.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  return revealed;
+}
+
+function AnimatedScore({ value, active, className }: { value: number; active: boolean; className?: string }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!active) return;
+    let raf = 0;
+    const duration = 850;
+    const startTime = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - startTime) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(value * eased));
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active, value]);
+
+  return <span className={className}>{active ? display : 0}</span>;
+}
+
 export function Leaderboard({
   entries,
   highlightId,
@@ -60,6 +93,10 @@ export function Leaderboard({
   const top3 = entries.filter((entry) => entry.rank <= 3).sort((a, b) => a.rank - b.rank);
   const podiumLayout = buildPodiumLayout(top3);
   const winner = top3.find((e) => e.rank === 1);
+
+  const revealOrder = REVEAL_ORDER.filter((rank) => top3.some((e) => e.rank === rank));
+  const revealed = useSequentialReveal(revealOrder);
+  const tableRevealDelay = REVEAL_START_MS + revealOrder.length * REVEAL_STEP_MS + 150;
 
   return (
     <div className={`vk-leaderboard ${showHero ? '' : 'vk-leaderboard--compact'}`}>
@@ -97,17 +134,30 @@ export function Leaderboard({
           {podiumLayout.map(({ entry, rank }) => {
             const style = PODIUM_STYLES[rank];
             const isWinner = rank === 1;
+            const isRevealed = revealed.includes(rank);
             return (
               <div
                 key={entry.participantId}
-                className={`vk-lb-podium-col ${style.delay} ${isWinner ? 'vk-lb-podium-col--winner' : ''}`}
+                className={`vk-lb-podium-col ${isRevealed ? 'vk-lb-podium-col--revealed' : ''} ${
+                  isWinner ? 'vk-lb-podium-col--winner' : ''
+                }`}
               >
-                <span className={`vk-lb-medal ${style.delay}`}>{style.medal}</span>
-                <div className={`vk-lb-podium-glow ${style.glow}`} aria-hidden />
+                {isWinner && isRevealed && (
+                  <div className="vk-lb-winner-burst" aria-hidden>
+                    {Array.from({ length: 14 }).map((_, i) => (
+                      <span key={i} className={`vk-lb-burst-piece vk-lb-burst-piece--${(i % 7) + 1}`} />
+                    ))}
+                  </div>
+                )}
+                <span className={`vk-lb-medal ${isRevealed ? 'vk-lb-medal--pop' : ''}`}>{style.medal}</span>
+                <div
+                  className={`vk-lb-podium-glow ${style.glow} ${isRevealed ? 'vk-lb-podium-glow--active' : ''}`}
+                  aria-hidden
+                />
                 <div
                   className={`vk-lb-podium-bar ${style.bar} ${PODIUM_HEIGHTS[rank]} ${
                     entry.participantId === highlightId ? 'vk-lb-podium-bar--you' : ''
-                  }`}
+                  } ${isWinner ? 'vk-lb-podium-bar--winner' : ''}`}
                 >
                   {isWinner && <span className="vk-lb-crown" aria-hidden>👑</span>}
                   <Avatar
@@ -116,10 +166,10 @@ export function Leaderboard({
                     size={isWinner ? 'lg' : 'md'}
                     className="vk-lb-podium-avatar"
                   />
-                  <span className="vk-lb-podium-score">{entry.totalScore}</span>
+                  <AnimatedScore value={entry.totalScore} active={isRevealed} className="vk-lb-podium-score" />
                   <span className="vk-lb-podium-points">баллов</span>
                 </div>
-                <p className="vk-lb-podium-name">{entry.name}</p>
+                <p className={`vk-lb-podium-name ${isRevealed ? 'vk-lb-podium-name--in' : ''}`}>{entry.name}</p>
               </div>
             );
           })}
@@ -145,7 +195,7 @@ export function Leaderboard({
                   className={`vk-lb-row vk-lb-row--in ${isYou ? 'vk-lb-row--you' : ''} ${
                     isTop ? `vk-lb-row--top${entry.rank}` : ''
                   }`}
-                  style={{ animationDelay: `${120 + index * 70}ms` }}
+                  style={{ animationDelay: `${tableRevealDelay + index * 70}ms` }}
                 >
                   <td>
                     <span className={`vk-lb-rank ${isTop ? `vk-lb-rank--${entry.rank}` : ''}`}>
