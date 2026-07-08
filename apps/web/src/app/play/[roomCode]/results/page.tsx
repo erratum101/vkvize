@@ -37,7 +37,7 @@ export default function ResultsPage() {
   return (
     <div className="vk-page mx-auto max-w-2xl px-4 py-6 sm:py-8">
       <Card>
-        <CardHeader title="Итоги квиза" subtitle={data.quizTitle} />
+        <CardHeader title={`Итоги квиза — ${data.quizTitle}`} />
         <CardBody>
           <Leaderboard entries={data.leaderboard} />
           <div className="mt-6 flex gap-3 justify-center">
