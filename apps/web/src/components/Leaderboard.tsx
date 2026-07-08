@@ -11,9 +11,9 @@ const PODIUM_STYLES: Record<number, { medal: string; bar: string; ring: string }
 };
 
 const PODIUM_HEIGHTS: Record<number, string> = {
-  1: 'h-24 sm:h-28',
-  2: 'h-16 sm:h-20',
-  3: 'h-11 sm:h-14',
+  1: 'h-28 sm:h-32',
+  2: 'h-20 sm:h-24',
+  3: 'h-14 sm:h-16',
 };
 
 // Suspenseful reveal order: 3rd place first, then 2nd, then the winner last.
@@ -91,11 +91,9 @@ export function Leaderboard({
 }) {
   const top3 = entries.filter((entry) => entry.rank <= 3).sort((a, b) => a.rank - b.rank);
   const podiumLayout = buildPodiumLayout(top3);
-  const winner = top3.find((e) => e.rank === 1);
 
   const revealOrder = REVEAL_ORDER.filter((rank) => top3.some((e) => e.rank === rank));
   const revealed = useSequentialReveal(revealOrder);
-  const winnerRevealed = revealed.includes(1);
   const listRevealDelay = REVEAL_START_MS + revealOrder.length * REVEAL_STEP_MS + 150;
 
   return (
@@ -107,18 +105,6 @@ export function Leaderboard({
             <span className="vk-lb-aurora-blob vk-lb-aurora-blob--2" />
             <span className="vk-lb-aurora-blob vk-lb-aurora-blob--3" />
           </div>
-
-          {showHero && winner && (
-            <div className={`vk-lb-winner-banner ${winnerRevealed ? 'vk-lb-winner-banner--in' : ''}`}>
-              <span className="vk-lb-winner-banner-icon" aria-hidden>
-                🏆
-              </span>
-              <span className="vk-lb-winner-banner-text">
-                Победитель — <strong>{winner.name}</strong>
-              </span>
-              <span className="vk-lb-winner-banner-score">{winner.totalScore} баллов</span>
-            </div>
-          )}
 
           <div className="vk-lb-podium-stage">
             {podiumLayout.map(({ entry, rank }) => {
@@ -147,17 +133,12 @@ export function Leaderboard({
                       </div>
                     )}
                     <div className={`vk-lb-avatar-glow ${isRevealed ? 'vk-lb-avatar-glow--active' : ''} ${style.ring}`} aria-hidden />
-                    <div className={`vk-lb-avatar-ring ${style.ring}`}>
-                      <Avatar
-                        name={entry.name}
-                        avatarUrl={entry.avatarUrl}
-                        size={isWinner ? 'lg' : 'md'}
-                        className="vk-lb-podium-avatar"
-                      />
-                    </div>
-                    <span className={`vk-lb-rank-badge ${style.ring} ${isRevealed ? 'vk-lb-rank-badge--pop' : ''}`}>
-                      {style.medal}
-                    </span>
+                    <Avatar
+                      name={entry.name}
+                      avatarUrl={entry.avatarUrl}
+                      size={isWinner ? 'lg' : 'md'}
+                      className="vk-lb-podium-avatar"
+                    />
                   </div>
 
                   <p className="vk-lb-podium-name">{entry.name}</p>

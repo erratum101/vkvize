@@ -133,29 +133,14 @@ main {
 @keyframes lb-crown-drop {
   0% {
     opacity: 0;
-    transform: translateY(-18px) scale(0.5) rotate(-15deg);
+    transform: translateX(-50%) translateY(-18px) scale(0.5) rotate(-15deg);
   }
   70% {
-    transform: translateY(3px) scale(1.1) rotate(6deg);
+    transform: translateX(-50%) translateY(3px) scale(1.1) rotate(6deg);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1) rotate(0);
-  }
-}
-
-@keyframes lb-badge-pop {
-  0% {
-    opacity: 0;
-    transform: scale(0.3) rotate(-25deg);
-  }
-  60% {
-    opacity: 1;
-    transform: scale(1.2) rotate(8deg);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
+    transform: translateX(-50%) translateY(0) scale(1) rotate(0);
   }
 }
 
@@ -217,31 +202,6 @@ main {
   100% { transform: translate(-50%, -16px) scale(1.12); }
 }
 
-@keyframes lb-winner-banner-in {
-  0% {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.9);
-  }
-  60% {
-    opacity: 1;
-    transform: translateY(2px) scale(1.03);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes lb-trophy-bounce {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-4deg);
-  }
-  50% {
-    transform: translateY(-3px) rotate(4deg);
-  }
-}
-
 .vk-leaderboard {
   display: flex;
   flex-direction: column;
@@ -296,54 +256,6 @@ main {
   animation: lb-aurora-drift-3 9s ease-in-out infinite alternate;
 }
 
-.vk-lb-winner-banner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem 0.6rem;
-  max-width: fit-content;
-  margin: 0 auto 1.35rem;
-  padding: 0.5rem 1.1rem;
-  border-radius: 9999px;
-  background: linear-gradient(90deg, #fff6df, #fff0f9);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.16);
-  font-size: 0.8rem;
-  text-align: center;
-  opacity: 0;
-  transform: translateY(-10px) scale(0.9);
-}
-
-.vk-lb-winner-banner--in {
-  animation: lb-winner-banner-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.vk-lb-winner-banner-icon {
-  display: inline-block;
-  font-size: 1.05rem;
-  animation: lb-trophy-bounce 2.2s ease-in-out infinite;
-  animation-delay: 0.6s;
-}
-
-.vk-lb-winner-banner-text {
-  color: var(--vk-text-primary);
-}
-
-.vk-lb-winner-banner-text strong {
-  color: #b8860b;
-  font-weight: 800;
-}
-
-.vk-lb-winner-banner-score {
-  font-weight: 800;
-  color: var(--vk-primary);
-  padding-left: 0.55rem;
-  border-left: 1px solid rgba(44, 45, 46, 0.12);
-}
-
 .vk-lb-podium-stage {
   position: relative;
   z-index: 1;
@@ -390,9 +302,11 @@ main {
 .vk-lb-crown {
   position: absolute;
   top: -1.4rem;
+  left: 50%;
   z-index: 3;
   font-size: 1.5rem;
   opacity: 0;
+  transform: translateX(-50%);
 }
 
 .vk-lb-crown--pop {
@@ -426,54 +340,9 @@ main {
 .vk-lb-avatar-glow.vk-lb-ring--silver { background: radial-gradient(circle, rgba(192, 192, 192, 0.6), transparent 70%); }
 .vk-lb-avatar-glow.vk-lb-ring--bronze { background: radial-gradient(circle, rgba(205, 127, 50, 0.6), transparent 70%); }
 
-.vk-lb-avatar-ring {
-  display: inline-flex;
-  padding: 3px;
-  border-radius: 9999px;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16);
-}
-
-.vk-lb-avatar-ring.vk-lb-ring--gold { background: linear-gradient(135deg, #ffe066, #f59e0b); }
-.vk-lb-avatar-ring.vk-lb-ring--silver { background: linear-gradient(135deg, #f3f4f6, #9ca3af); }
-.vk-lb-avatar-ring.vk-lb-ring--bronze { background: linear-gradient(135deg, #fbbf77, #cd7f32); }
-
 .vk-lb-podium-avatar {
   display: block;
 }
-
-.vk-lb-rank-badge {
-  position: absolute;
-  right: -0.2rem;
-  bottom: -0.2rem;
-  z-index: 2;
-  display: flex;
-  width: 1.5rem;
-  height: 1.5rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  background: #fff;
-  border: 2px solid;
-  font-size: 0.85rem;
-  line-height: 1;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-  opacity: 0;
-}
-
-.vk-lb-podium-col--winner .vk-lb-rank-badge {
-  width: 1.85rem;
-  height: 1.85rem;
-  font-size: 1rem;
-}
-
-.vk-lb-rank-badge--pop {
-  animation: lb-badge-pop 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) both;
-  animation-delay: 0.3s;
-}
-
-.vk-lb-rank-badge.vk-lb-ring--gold { border-color: #f59e0b; }
-.vk-lb-rank-badge.vk-lb-ring--silver { border-color: #9ca3af; }
-.vk-lb-rank-badge.vk-lb-ring--bronze { border-color: #cd7f32; }
 
 .vk-lb-winner-burst {
   position: absolute;
@@ -553,21 +422,37 @@ main {
   z-index: 1;
   display: flex;
   width: 100%;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   overflow: hidden;
   margin-top: 0.6rem;
   border-radius: 16px 16px 6px 6px;
-  padding-top: 0.35rem;
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.14);
   transform-origin: bottom center;
 }
 
 .vk-lb-bar-number {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 900;
-  color: rgba(255, 255, 255, 0.5);
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.65);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+@media (min-width: 640px) {
+  .vk-lb-bar-number {
+    font-size: 2.4rem;
+  }
+}
+
+.vk-lb-podium-col--winner .vk-lb-bar-number {
+  font-size: 2.4rem;
+}
+
+@media (min-width: 640px) {
+  .vk-lb-podium-col--winner .vk-lb-bar-number {
+    font-size: 2.85rem;
+  }
 }
 
 .vk-lb-podium-col--winner .vk-lb-bar::before {
